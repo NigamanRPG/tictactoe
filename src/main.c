@@ -18,9 +18,9 @@ typedef struct cell_pos {
 } cell_pos;
 
 void game_interrupt(unsigned int num) {
-	struct timespec interrupt = {0, num};
+	struct timespec interrupt = {0, 0};
 	struct timespec ret;
-
+	interrupt.tv_nsec = num;
 	nanosleep(&interrupt, &ret);
 
 	return;
@@ -90,7 +90,6 @@ static void draw_winner_line(codl_window *xo_win, int x0, int y0, int x1, int y1
 
 static void draw_winner_line_d(codl_window *xo_win, int mode) {
 	int count   = 0;
-	int count_1 = 0;
 
 	codl_set_colour(xo_win, 1, 256);
 	if(mode) {
@@ -131,8 +130,6 @@ int main(void) {
 	int moves = TTT_HEIGHT * TTT_WIDTH;
 	int count;
 	int count_1;
-	int count_2;
-	int winner = 0;
 	int xo_arr[TTT_HEIGHT][TTT_WIDTH] = {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}};
 	int quit = 0;
 	int neutral = 0;
