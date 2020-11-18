@@ -3,13 +3,18 @@ CFLAGS=-Iinclude -pedantic -Wall -Wextra -Wsign-conversion -Wconversion -Wshadow
 OBJS=main.o codl.o
 SRC=src
 
-all: options main.o codl.o tictactoe
+all: options prepare main.o codl.o tictactoe
 
 options:
 	@echo TicTacToe build options:
 	@echo "CC	= $(CC)"
 	@echo "CFLAGS	= $(CFLAGS)"
 	@echo
+
+prepare:
+	mkdir -p include
+	[ -f ${SRC}/codl.c ] || curl https://raw.githubusercontent.com/celtrecium/codl/master/codl.c -o ${SRC}/codl.c
+	[ -f include/codl.h ] || curl https://raw.githubusercontent.com/celtrecium/codl/master/codl.h -o include/codl.h
 
 clean:
 	rm -rf tictactoe
