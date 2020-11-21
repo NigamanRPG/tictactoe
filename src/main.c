@@ -26,17 +26,17 @@ void game_interrupt(unsigned int num) {
 	return;
 }
 
-static int select_cell(codl_window *xo_win, codl_windows_list *wls, cell_pos *cp, codl_window *main_win) {
+static int select_cell(codl_window *xo_win, cell_pos *cp, codl_window *main_win) {
 	codl_set_colour(xo_win, 1, 15);
 	codl_replace_attributes(xo_win, cp->column * 4, cp->row * 2, cp->column * 4 + 2, cp->row * 2);
-	codl_display(wls);
+	codl_display();
 
 	for(;;) {
 		if(codl_resize_term()) {
-			codl_change_window_position(main_win, wls, 
+			codl_change_window_position(main_win, 
 				(codl_get_term()->width  / 2) - 7, 
 				(codl_get_term()->height / 2) - 5);
-			codl_display(wls);
+			codl_display();
 		}
 
 		if(codl_kbhit()) {
@@ -68,7 +68,7 @@ static int select_cell(codl_window *xo_win, codl_windows_list *wls, cell_pos *cp
 			
 			codl_set_colour(xo_win, 1, 15);
 			codl_replace_attributes(xo_win, cp->column * 4, cp->row * 2, cp->column * 4 + 2, cp->row * 2);
-			codl_display(wls);
+			codl_display();
 		}
 		
 		game_interrupt(5000000);
@@ -120,10 +120,9 @@ static void sign_handler(int signum) {
 }
 
 int main(void) {
-	codl_window main_win;
-	codl_window ttt_win;
-	codl_window xo_win;
-	codl_windows_list main_ls;
+	codl_window *main_win;
+	codl_window *ttt_win;
+	codl_window *xo_win;
 	cell_pos c_p = {0, 0};
 	int player   = 0;
 	int cell_val;
@@ -138,44 +137,43 @@ int main(void) {
 	signal(SIGTSTP, sign_handler);
 	signal(SIGCONT, sign_handler);
 
-	codl_create_windows_list(&main_ls);
 	codl_cursor_mode(CODL_HIDE);
 	codl_noecho();
 	codl_initialize();
-	codl_create_window(&main_win, codl_get_term(), &main_ls, main_ls.size + 1, (codl_get_term()->width / 2 - 7),
+	main_win = codl_create_window(codl_get_term(), 1, (codl_get_term()->width / 2 - 7),
 			(codl_get_term()->height / 2) - 5, 13, 10);
-	codl_create_window(&ttt_win, &main_win, &main_ls, main_ls.size + 1, 1, 1, 11, 5);
-	codl_create_window(&xo_win, &ttt_win, &main_ls, main_ls.size + 1, 0, 0, 11, 5);
-	codl_set_alpha(&xo_win, CODL_ENABLE);
+	ttt_win  = codl_create_window(main_win, 2, 1, 1, 11, 5);
+	xo_win   = codl_create_window(ttt_win, 3, 0, 0, 11, 5);
+	codl_set_alpha(xo_win, CODL_ENABLE);
 
-	codl_set_colour(&ttt_win,  256, 15);
-	codl_set_colour(&main_win, 256, 14);
-	codl_set_attribute(&main_win, CODL_BOLD);
-	codl_write(&main_win, "  TicTacToe \n");
-	codl_write(&ttt_win,  "   │   │   \n");
-	codl_write(&ttt_win,  "───┼───┼───\n");
-	codl_write(&ttt_win,  "   │   │   \n");
-	codl_write(&ttt_win,  "───┼───┼───\n");
-	codl_write(&ttt_win,  "   │   │   \n");
-	codl_set_colour(&main_win, 256, 256);
-	codl_set_attribute(&main_win, CODL_NO_ATTRIBUTES);
+	codl_set_colour(ttt_win,  256, 15);
+	codl_set_colour(main_win, 256, 14);
+	codl_set_attribute(main_win, CODL_BOLD);
+	codl_write(main_win, "  TicTacToe \n");
+	codl_write(ttt_win,  "   │   │   \n");
+	codl_write(ttt_win,  "───┼───┼───\n");
+	codl_write(ttt_win,  "   │   │   \n");
+	codl_write(ttt_win,  "───┼───┼───\n");
+	codl_write(ttt_win,  "   │   │   \n");
+	codl_set_colour(main_win, 256, 256);
+	codl_set_attribute(main_win, CODL_NO_ATTRIBUTES);
 
-	codl_set_attribute(&xo_win, CODL_BOLD);
+	codl_set_attribute(xo_win, CODL_BOLD);
 	for(count = 0; count < TTT_HEIGHT; ++count) {
 		for(count_1 = 0; count_1 < TTT_WIDTH; ++count_1) {
-			codl_set_cursor_position(&xo_win, count_1 * 4, count * 2);
-			codl_write(&xo_win, "   ");
+			codl_set_cursor_position(xo_win, count_1 * 4, count * 2);
+			codl_write(xo_win, "   ");
 		}
 	}
 
-	codl_display(&main_ls);
+	codl_display();
 	while(!quit) {
-		if(select_cell(&xo_win, &main_ls, &c_p, &main_win)) {
+		if(select_cell(xo_win, &c_p, main_win)) {
 			if(!xo_arr[c_p.row][c_p.column]) {
 				--moves;
 				player = !player;
-				codl_set_cursor_position(&xo_win, c_p.column * 4 + 1, c_p.row * 2);
-				codl_write(&xo_win, player ? "X" : "0");
+				codl_set_cursor_position(xo_win, c_p.column * 4 + 1, c_p.row * 2);
+				codl_write(xo_win, player ? "X" : "0");
 				xo_arr[c_p.row][c_p.column] = player + 1;
 
 				cell_val = xo_arr[0][0];
@@ -184,7 +182,7 @@ int main(void) {
 				for(count = 1; (count < TTT_WIDTH) && !quit; ++count) {
 					if((cell_val == xo_arr[count][count]) && xo_arr[count][count]) {
 						if(count == TTT_WIDTH - 1) {
-							draw_winner_line_d(&xo_win, 1);
+							draw_winner_line_d(xo_win, 1);
 							
 							quit = 1;
 							break;
@@ -197,7 +195,7 @@ int main(void) {
 				for(count = 1; (count < TTT_WIDTH) && !quit; ++count) {
 					if((cell_val == xo_arr[count][TTT_WIDTH - count - 1]) && xo_arr[count][TTT_WIDTH - count - 1]) {
 						if(count == TTT_WIDTH - 1) {
-							draw_winner_line_d(&xo_win, 0);
+							draw_winner_line_d(xo_win, 0);
 							
 							quit = 1;
 							break;
@@ -212,7 +210,7 @@ int main(void) {
 					for(count_1 = 1; count_1 < TTT_WIDTH; ++count_1) {
 						if((cell_val == xo_arr[count][count_1]) && xo_arr[count][count_1]) {
 							if(count_1 == TTT_WIDTH - 1) {
-								draw_winner_line(&xo_win, 0, count, TTT_WIDTH, count);
+								draw_winner_line(xo_win, 0, count, TTT_WIDTH, count);
 
 								quit = 1;
 								break;
@@ -227,7 +225,7 @@ int main(void) {
 					for(count_1 = 1; count_1 < TTT_HEIGHT; ++count_1) {
 						if((cell_val == xo_arr[count_1][count]) && xo_arr[count_1][count]) {
 							if(count_1 == TTT_HEIGHT - 1) {
-								draw_winner_line(&xo_win, count, 0, count, TTT_HEIGHT);
+								draw_winner_line(xo_win, count, 0, count, TTT_HEIGHT);
 
 								quit = 1;
 								break;
@@ -236,7 +234,7 @@ int main(void) {
 					}
 				}	
 				
-				codl_display(&main_ls);
+				codl_display();
 
 				if(!moves && !quit) {
 					quit    = 1;
@@ -249,16 +247,15 @@ int main(void) {
 		}
 	}
 
-	codl_set_cursor_position(&main_win, 0, ttt_win.height + 1);
+	codl_set_cursor_position(main_win, 0, ttt_win->height + 1);
 	if(!neutral) {
-		codl_write(&main_win, "Player ");
-		codl_write(&main_win, player ? "X win!" : "0 win!");
+		codl_write(main_win, "Player ");
+		codl_write(main_win, player ? "X win!" : "0 win!");
 	} else {
-		codl_write(&main_win, "  Neutral:)");
+		codl_write(main_win, "  Neutral:)");
 	}
 
-	codl_display(&main_ls);
-	codl_clear_by_list(&main_ls);
+	codl_display();
 	codl_end();
 	codl_echo();
 	codl_cursor_mode(CODL_SHOW);
