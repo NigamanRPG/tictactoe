@@ -1,6 +1,6 @@
 #define _POSIX_C_SOURCE 199309L
 
-#include "codl.h"
+#include <codl.h>
 #include <time.h>
 #include <signal.h>
 
